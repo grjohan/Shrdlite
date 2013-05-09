@@ -7,8 +7,7 @@ package com.company;
  * Time: 10:10
  * To change this template use File | Settings | File Templates.
  */
-public class Command
-{
+public class Command {
     private Movement movement;
     private Entity block;
     private int location;
@@ -47,7 +46,6 @@ public class Command
         this.block = block;
     }
 
-
     public Direction getDirection() {
         return direction;
     }
@@ -56,23 +54,18 @@ public class Command
         this.direction = direction;
     }
 
-
-
-    public Command()
-    {
+    public Command() {
     }
 }
 
-enum Movement
-{
-   doNothing,
-   move,
-   pick,
-   drop;
+enum Movement {
+    doNothing,
+    move,
+    pick,
+    drop;
 }
 
-enum Direction
-{
+enum Direction {
     right,
     left,
     here,

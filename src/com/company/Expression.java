@@ -11,6 +11,7 @@ public class Expression {
     String thisCommand;
     Expression subExpressionOne;
     Expression subExpressionTwo;
+
     public String getThisCommand() {
         return thisCommand;
     }
@@ -30,7 +31,6 @@ public class Expression {
     }
 
 
-
     public Expression getSubExpressionTwo() {
         return subExpressionTwo;
     }
@@ -40,9 +40,7 @@ public class Expression {
     }
 
 
-
-    public Expression()
-    {
+    public Expression() {
         thisCommand = "";
     }
 

@@ -10,38 +10,32 @@ package com.company;
 public class Parser {
     private String[] tokens;
     int atIndex;
-    public Parser(String tree)
-    {
-        tree = tree.substring(1,tree.lastIndexOf(')'));
+
+    public Parser(String tree) {
+        tree = tree.substring(1, tree.lastIndexOf(')'));
         tokens = tree.split(" ");
         atIndex = 0;
     }
 
-    public Expression MakeExpressions()
-    {
+    public Expression MakeExpressions() {
         if (Peek().equals(""))
             NextToken();
         Expression expression = new Expression();
-        while (!(Peek().equals("(") || Peek().equals(")")))
-        {
+        while (!(Peek().equals("(") || Peek().equals(")"))) {
             expression.AppendThisCommand(NextToken());
         }
         String temp = NextToken();
-        if(temp.equals("("))
+        if (temp.equals("("))
             expression.setSubExpressionOne(MakeExpressions());
-        else if(temp.equals(")"))
-        {
+        else if (temp.equals(")")) {
             return expression;
         }
-        if(HasNext())
-        {
-            if (Peek().equals("("))
-            {
+        if (HasNext()) {
+            if (Peek().equals("(")) {
                 NextToken();
                 expression.setSubExpressionTwo(MakeExpressions());
             }
-            if (Peek().equals(")"))
-            {
+            if (Peek().equals(")")) {
                 NextToken();
                 return expression;
             }
@@ -51,21 +45,18 @@ public class Parser {
         return expression;
     }
 
-    public String NextToken()
-    {
+    public String NextToken() {
         String temp = tokens[atIndex];
         atIndex++;
-        return  temp;
+        return temp;
     }
 
-    public String Peek()
-    {
+    public String Peek() {
         return tokens[atIndex];
     }
 
-    public Boolean HasNext()
-    {
-        return atIndex < tokens.length -1;
+    public Boolean HasNext() {
+        return atIndex < tokens.length - 1;
     }
 
 }

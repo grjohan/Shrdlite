@@ -7,8 +7,7 @@ package com.company;
  * Time: 14:28
  * To change this template use File | Settings | File Templates.
  */
-public class Entity
-{
+public class Entity {
     private Shape shape;
     private Size size;
     private Colour colour;
@@ -54,8 +53,7 @@ public class Entity
         return colour;
     }
 
-    public Entity(Shape shape, Colour colour, Size size, String name)
-    {
+    public Entity(Shape shape, Colour colour, Size size, String name) {
         this.shape = shape;
         this.colour = colour;
         this.size = size;
