@@ -8,6 +8,9 @@ package com.company;
  * To change this template use File | Settings | File Templates.
  */
 public class Expression {
+    String thisCommand;
+    Expression subExpressionOne;
+    Expression subExpressionTwo;
     public String getThisCommand() {
         return thisCommand;
     }
@@ -26,8 +29,7 @@ public class Expression {
         this.subExpressionOne = subExpression;
     }
 
-    String thisCommand;
-    Expression subExpressionOne;
+
 
     public Expression getSubExpressionTwo() {
         return subExpressionTwo;
@@ -37,7 +39,7 @@ public class Expression {
         this.subExpressionTwo = subExpressionTwo;
     }
 
-    Expression subExpressionTwo;
+
 
     public Expression()
     {
