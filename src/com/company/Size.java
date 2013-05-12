@@ -12,7 +12,8 @@ public enum Size {
     small(1),
     large(3),
     wide(3),
-    medium(2);
+    medium(2),
+    floor(4);
     private int value;
 
     private Size(int value) {

@@ -12,5 +12,6 @@ public enum Shape {
     Rectangle,
     Square,
     Pyramid,
-    Box;
+    Box,
+    Floor;
 }

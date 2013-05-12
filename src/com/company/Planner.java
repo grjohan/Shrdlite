@@ -6,31 +6,23 @@ public class Planner {
     String holding;
     Entity currentlyHolding;
     String world;
+    String goal;
+    int q = 0;
     HashMap<String, Entity> entities;
+    Hashtable<String,Node> nodes;
     ArrayList<ArrayList<Entity>> entityWorld;
     String[] trees;
     ArrayList<Command> commands = new ArrayList<Command>();
     Parser parser;
 
-    public Planner(String args[]) {
-        holding = "";
-        world = "; a,b ; c,d ; ; e,f,g,h,i ; ; ; j,k ; ; l,m";
-        trees = "( move ( all ( block rectangle _ _ ) ) ( leftof ( the ( block ball _ white ) ) ) )".split(";");
-        // holding = args[0];
-        // world = args[1];
-        // trees = args[2].split(";");
-        entityWorld = new ArrayList<ArrayList<Entity>>();
-
+    public Planner(String holding, String world, String goal,HashMap<String, Entity> entities,ArrayList<ArrayList<Entity>> entityWorld ) {
+        this.holding = holding;
+        this.world = world;
+        this.goal = goal;
+        this.entities = entities;
+        this.entityWorld = entityWorld;
+        nodes = new Hashtable<String, Node>();
         // Print the data
-        System.out.println("# Group 19's Stupid Java Planner!");
-        System.out.println("# Holding: " + holding);
-        System.out.println("# World: " + world);
-        for (String t : trees) {
-            System.out.println("# Tree: " + t);
-        }
-        parser = new Parser(trees[0]);
-        CreateEntities();
-        PlaceEntities();
         // if we are holding something, set that as currently_holding
         if (!holding.equals("")) {
             for (String name : entities.keySet()) {
@@ -38,12 +30,6 @@ public class Planner {
                     currentlyHolding = entities.get(name);
             }
         }
-
-        ExpressionParser exp = new ExpressionParser(entities);
-        Expression ex = parser.MakeExpressions();
-        ArrayList<Command> commands = exp.ParseExpression(ex, false);
-        for (Command command : commands)
-            CarryOutCommand(command);
     }
 
     // --------------- here is code to carry out commands -----------------
@@ -165,86 +151,154 @@ public class Planner {
         return block2.getSize().getValue() >= block1.getSize().getValue();
     }
 
-    // ------------------------- below here is parsing ---------------------------------
 
-    private void PlaceEntities() {
-        for (int i = 0; i < 10; i++) {
-            entityWorld.add(new ArrayList<Entity>());
-        }
+     public String GraphSearch(Node start, String goal)
+     {
+         Comparator<Node> compareNodes = new Comparator<Node>() {
+             @Override
+             public int compare(Node o1, Node o2) {
+                 return o1.getValue() - o2.getValue();
+             }
+         };
+       PriorityQueue<Node> frontier = new PriorityQueue<Node>(100000,compareNodes);
 
-        String[] stacks = world.split(";");
-        for (int j = 0; j < stacks.length; j++) {
-            String stack = stacks[j].replaceAll("\\s|,", "");
-            for (int i = 0; i < stack.length(); i++) {
-                switch (stack.charAt(i)) {
-                    case 'a':
-                        AddEntity("a", j, i);
-                        break;
-                    case 'b':
-                        AddEntity("b", j, i);
-                        break;
-                    case 'c':
-                        AddEntity("c", j, i);
-                        break;
-                    case 'd':
-                        AddEntity("d", j, i);
-                        break;
-                    case 'e':
-                        AddEntity("e", j, i);
-                        break;
-                    case 'f':
-                        AddEntity("f", j, i);
-                        break;
-                    case 'g':
-                        AddEntity("g", j, i);
-                        break;
-                    case 'h':
-                        AddEntity("h", j, i);
-                        break;
-                    case 'i':
-                        AddEntity("i", j, i);
-                        break;
-                    case 'j':
-                        AddEntity("j", j, i);
-                        break;
-                    case 'k':
-                        AddEntity("k", j, i);
-                        break;
-                    case 'l':
-                        AddEntity("l", j, i);
-                        break;
-                    case 'm':
-                        AddEntity("m", j, i);
-                        break;
+       //ArrayList<Node> frontier =  new ArrayList<Node>();
+       start.setFromNode(null);
+       frontier.add(start);
+       ArrayList<Node> explored = new ArrayList<Node>();
+       while(true)
+       {
+           if(frontier.size() == 0)
+               return "No plan found";
+           Node test = frontier.poll();
+           if (++q == 10000)
+           {
+               int x = 1;
+           }
+
+           if(test.getState().equals(goal))
+           {
+               String actions = "";
+               while (test.getFromNode() != null)
+               { Node from = test.getFromNode();
+                 actions += from.getNeighbors().get(test);
+                 test = from;
+               }
+               return actions;
+           }
+           explored.add(test);
+           ArrayList<Node> expanded = ExpandNode(test);
+           for (Node node : expanded)
+           {
+               if (! frontier.contains(node) && !explored.contains(node))
+               {
+                   node.setFromNode(test);
+                   SetNodeValue(node,goal);
+                   frontier.add(node);
+               }
+           }
+       }
+     }
+
+    private void SetNodeValue(Node node, String goal)
+    {
+       int value = 0;
+       String[] state = node.getState().split(";");
+       String[] goals = goal.split(";");
+       for (int i = 0; i < state.length - 1; i++)
+       {
+         char one,two;
+         int min = Math.min(state[i].length(),goals[i].length());
+         int max = Math.max(state[i].length(),goals[i].length());
+         value += max-min;
+         for(int j = 0; j < min; j++)
+         {
+             one = state[i].charAt(j);
+             two = goals[i].charAt(j);
+             if (one != two)
+                 value++;
+         }
+       }
+        node.setValue(value);
+    }
+
+    private ArrayList<Node> ExpandNode(Node node)
+    {
+        String currentState = node.getState();
+        String[] stacks = currentState.split(";");
+        ArrayList<Node> neighborsToReturn = new ArrayList<Node>();
+        Dictionary<Node, String> neighbors = new Hashtable<Node, String>();
+        // loop through all stacks, we can only take an action for the top of each stack
+        for (int i = 0; i < stacks.length - 1; i++) {
+            String modifiedStacks = "";
+            if ((stacks[i].length() > 1)) {
+                String currentStack = stacks[i];
+                Node temp;
+                // actions include are
+                // lifting it and holding it, create a node for that
+                if(! node.isHolding())
+                {
+                    for (int j = 0; j < stacks.length; j++) {
+                        if (i != j)
+                            modifiedStacks += stacks[j] + ";";
+                        else
+                            modifiedStacks += currentStack.substring(0, currentStack.length() - 1) + ";";
+                    }
+
+                    if (nodes.containsKey(modifiedStacks)) {
+                        temp = nodes.get(modifiedStacks);
+                        temp.setHolding(true);
+                        neighbors.put(temp, "pick " + i);
+                        neighborsToReturn.add(temp);
+                    } else {
+
+                        temp = new Node();
+                        temp.setState(modifiedStacks);
+                        temp.setHolding(true);
+                        neighbors.put(temp, "pick " + i);
+                        neighborsToReturn.add(temp);
+                    }
                 }
 
+                String thisStack = stacks[i].substring(0, stacks[i].length() - 1);
+                Entity topBlock = entities.get(stacks[i].substring(stacks[i].length() - 1));
+                for (int j = 0; j < stacks.length - 1; j++) {
+                    modifiedStacks = "";
+                    String stackToPlaceAt = stacks[j];
+                    Entity thisStacksTop = entities.get(stacks[j].substring(stacks[j].length() - 1));
+                    // if it is not a pyramid, ball and is equal or less size than that stacks top
+                    if( (thisStacksTop.getShape() != Shape.Pyramid || thisStacksTop.getShape() != Shape.Ball) && topBlock.getSize().getValue() <= thisStacksTop.getSize().getValue())
+                    {
+                        //    if it is a box, it has to be strictly less than that stacks top
+                        if( !(topBlock.getShape() == Shape.Box && topBlock.getSize().getValue() > thisStacksTop.getSize().getValue()))
+                        {
+                            stackToPlaceAt += topBlock.getName();
+                            for (int z = 0; z < stacks.length; z++) {
+                                if (z == j)
+                                    modifiedStacks += stackToPlaceAt + ";";
+                                else if (z == i)
+                                    modifiedStacks += thisStack + ";";
+                                else
+                                    modifiedStacks += stacks[z] + ";";
+                            }
+                            if (nodes.containsKey(modifiedStacks)) {
+                                temp = nodes.get(modifiedStacks);
+                                neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                neighborsToReturn.add(temp);
+                            } else {
+
+                                temp = new Node();
+                                temp.setState(modifiedStacks);
+                                neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                neighborsToReturn.add(temp);
+                            }
+                        }
+                    }
+                }
             }
         }
+      node.setNeighbors(neighbors);
+      return neighborsToReturn;
     }
-
-    private void AddEntity(String name, int stack, int index) {
-        entities.get(name).setStack(stack);
-        entities.get(name).setIndexInStack(index);
-        entityWorld.get(stack).add(entities.get(name));
-    }
-
-    // Only hard coded things that have to do with the world below this point
-    private void CreateEntities() {   // create the entities given in world.js
-        entities = new HashMap<String, Entity>();
-        entities.put("a", new Entity(Shape.Rectangle, Colour.Blue, Size.tall, "a"));
-        entities.put("b", new Entity(Shape.Ball, Colour.White, Size.small, "b"));
-        entities.put("c", new Entity(Shape.Square, Colour.Red, Size.large, "c"));
-        entities.put("d", new Entity(Shape.Pyramid, Colour.Green, Size.large, "d"));
-        entities.put("e", new Entity(Shape.Box, Colour.White, Size.large, "e"));
-        entities.put("f", new Entity(Shape.Rectangle, Colour.Black, Size.wide, "f"));
-        entities.put("g", new Entity(Shape.Rectangle, Colour.Blue, Size.wide, "g"));
-        entities.put("h", new Entity(Shape.Rectangle, Colour.Red, Size.wide, "h"));
-        entities.put("i", new Entity(Shape.Pyramid, Colour.Yellow, Size.medium, "i"));
-        entities.put("j", new Entity(Shape.Box, Colour.Red, Size.large, "j"));
-        entities.put("k", new Entity(Shape.Ball, Colour.Yellow, Size.small, "k"));
-        entities.put("l", new Entity(Shape.Box, Colour.Red, Size.medium, "l"));
-        entities.put("m", new Entity(Shape.Ball, Colour.Blue, Size.medium, "m"));
-    }
-
 
 }
