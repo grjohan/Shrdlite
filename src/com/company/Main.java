@@ -10,33 +10,48 @@ public class Main {
     static Entity floor =  new Entity(Shape.Floor, Colour.Black, Size.floor, "X");
     public static void main(String[] args) {
 
-        String[] trees;
-        String holding;
-        holding = "";
-        world = "; a,b ; c,d ; ; e,f,g,h,i ; ; ; j,k ; ; l,m";
-        trees = "( move ( all ( block rectangle _ _ ) ) ( leftof ( the ( block ball _ white ) ) ) )".split(";");
-        String goal = "";
-        System.out.println("# Group 19's Stupid Java Planner!");
+       String[] trees;
+       String holding;
+       holding = "";
+       world = "h,g,f,a ; b ; c,d ; ; e,i ; ; ; j,k ; ; l,m";
+       trees = "( move ( the ( block square large red ) ) ( inside ( the ( block box large white ) ) ) )".split(";");
+       //holding = args[0];
+       //world = args[1];
+       //trees = args[2].split(";");
+
+        System.out.println("# Group 19's Decent Java Planner!");
         System.out.println("# Holding: " + holding);
         System.out.println("# World: " + world);
         for (String t : trees) {
             System.out.println("# Tree: " + t);
         }
-        // holding = args[0];
-        // world = args[1];
-        // trees = args[2].split(";");
+
         entityWorld = new ArrayList<ArrayList<Entity>>();
         CreateEntities();
         PlaceEntities();
         Parser parser = new Parser(trees[0]);
         ExpressionParser exp = new ExpressionParser(entities);
         Expression ex = parser.MakeExpressions();
+
+        String[] newWorld = world.split(";");
+        world = "";
+        for(int i = 0; i < newWorld.length; i++)
+        {
+            newWorld[i] = "X" + newWorld[i].replaceAll(",","").trim();
+            world += newWorld[i] + ";";
+        }
+        world = world.substring(0,world.length()-1);
         ArrayList<Command> commands = exp.ParseExpression(ex, false);
-        Planner planner = new Planner(holding,world,goal,entities,entityWorld);
         Node start = new Node();
-        start.setState("X;Xab;Xcd;X;Xefghi;X;X;Xjk;X;Xlm");
-        goal = "Xfgh;Xab;Xcd;X;Xei;X;X;Xjk;X;Xlm;";
-        String[] actions = planner.GraphSearch(start,goal).split(";");
+        start.setState(world);
+        start.setWeightUntilHere(0);
+        if(!holding.equals(""))
+        {
+            start.setHolding(true);
+            start.setHoldingBlock(holding);
+        }
+        Planner planner = new Planner(world,commands,entities);
+        String[] actions = planner.GraphSearch(start).split(";");
         for(int i = actions.length-1; i >= 0; i--)
         {
             System.out.println(actions[i]);

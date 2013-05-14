@@ -12,6 +12,16 @@ import java.util.Dictionary;
 public class Node implements Comparable<Node>{
     private Dictionary<Node, String> neighbors;
 
+    public int getWeightUntilHere() {
+        return weightUntilHere;
+    }
+
+    public void setWeightUntilHere(int weightUntilHere) {
+        this.weightUntilHere = weightUntilHere;
+    }
+
+    int weightUntilHere;
+
     public int compareTo(Node o1)
     {
         return o1.getValue() - this.getValue();
@@ -64,6 +74,17 @@ public class Node implements Comparable<Node>{
     }
 
     boolean holding;
+
+    public String getHoldingBlock() {
+        return holdingBlock;
+    }
+
+    public void setHoldingBlock(String holdingBlock) {
+        this.holdingBlock = holdingBlock;
+    }
+
+    String holdingBlock;
+
     public Node(){}
 
 }

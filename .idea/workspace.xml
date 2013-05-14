@@ -4,17 +4,17 @@
     <list default="true" id="9198d058-3463-4055-9d36-238ab7f3a3cb" name="Default" comment="" />
     <ignored path="planner.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Main.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368366411054" ignored="false" />
-    <file path="/Planner.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368371692721" ignored="false" />
+    <file path="/Main.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368538455153" ignored="false" />
+    <file path="/Planner.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368541406114" ignored="false" />
     <file path="/Entity.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1367930119281" ignored="false" />
     <file path="/Size.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368359538142" ignored="false" />
     <file path="/Command.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368355810268" ignored="false" />
     <file path="/fragment.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368355711748" ignored="false" />
     <file path="/Tokenizer.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1367992284914" ignored="false" />
     <file path="/Expression.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1367991505814" ignored="false" />
-    <file path="/ExpressionParser.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368097337578" ignored="false" />
+    <file path="/ExpressionParser.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368520155439" ignored="false" />
     <file path="/Parser.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368088677807" ignored="false" />
-    <file path="/Node.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368371615176" ignored="false" />
+    <file path="/Node.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368538352013" ignored="false" />
     <file path="/Shape.java" changelist="9198d058-3463-4055-9d36-238ab7f3a3cb" time="1368359555113" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -66,7 +66,23 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
-    <line_breakpoints default_suspend_policy="SuspendAll" default_condition_enabled="true" />
+    <line_breakpoints default_suspend_policy="SuspendAll" default_condition_enabled="true">
+      <breakpoint url="file://$PROJECT_DIR$/src/com/company/Planner.java" line="69" class="com.company.Planner" package="com.company">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </line_breakpoints>
     <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_rules />
     <ui_properties />
@@ -77,33 +93,26 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Planner.java" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/com/company/Planner.java">
+      <file leaf-file-name="Main.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/com/company/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="175" column="0" selection-start="7186" selection-end="7186" vertical-scroll-proportion="-6.105263">
-              <folding>
-                <element signature="e#350#359#0" expanded="true" />
-                <element signature="e#1305#1314#0" expanded="true" />
-                <element signature="e#3350#3359#0" expanded="true" />
-                <element signature="e#6557#6737#0" expanded="true" />
-                <element signature="e#6571#6577#0" expanded="true" />
-                <element signature="e#6725#6726#0" expanded="true" />
-                <element signature="e#6794#6800#0" expanded="true" />
-                <element signature="e#6991#6997#0" expanded="true" />
-                <element signature="e#8836#8842#0" expanded="true" />
-                <element signature="e#8904#8918#0" expanded="true" />
-              </folding>
+            <state line="19" column="9" selection-start="659" selection-end="659" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Main.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/com/company/Main.java">
+      <file leaf-file-name="Planner.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/com/company/Planner.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="37" column="49" selection-start="1536" selection-end="1536" vertical-scroll-proportion="0.0">
+            <state line="47" column="70" selection-start="1857" selection-end="1857" vertical-scroll-proportion="0.7062315">
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#1953#1961#0" expanded="true" />
+                <element signature="e#279#288#0" expanded="true" />
+                <element signature="e#1968#1974#0" expanded="true" />
+                <element signature="e#2191#2197#0" expanded="true" />
+                <element signature="e#2389#2395#0" expanded="true" />
+                <element signature="e#6507#6513#0" expanded="true" />
+                <element signature="e#6575#6589#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -123,15 +132,15 @@
         <option value="$PROJECT_DIR$/src/com/company/Color.java" />
         <option value="$PROJECT_DIR$/src/com/company/Entity.java" />
         <option value="$PROJECT_DIR$/src/com/company/Tokenizer.java" />
-        <option value="$PROJECT_DIR$/src/com/company/Parser.java" />
-        <option value="$PROJECT_DIR$/src/com/company/ExpressionParser.java" />
         <option value="$PROJECT_DIR$/src/com/company/Expression.java" />
         <option value="$PROJECT_DIR$/src/com/company/Command.java" />
         <option value="$PROJECT_DIR$/src/Node.java" />
         <option value="$PROJECT_DIR$/src/com/company/Size.java" />
         <option value="$PROJECT_DIR$/src/com/company/Shape.java" />
-        <option value="$PROJECT_DIR$/src/com/company/Main.java" />
+        <option value="$PROJECT_DIR$/src/com/company/Parser.java" />
+        <option value="$PROJECT_DIR$/src/com/company/ExpressionParser.java" />
         <option value="$PROJECT_DIR$/src/com/company/Node.java" />
+        <option value="$PROJECT_DIR$/src/com/company/Main.java" />
         <option value="$PROJECT_DIR$/src/com/company/Planner.java" />
       </list>
     </option>
@@ -169,12 +178,17 @@
     </navigator>
     <panes>
       <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
             <PATH_ELEMENT>
               <option name="myItemId" value="planner" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="External Libraries" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ExternalLibrariesNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
@@ -207,15 +221,15 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
-    <property name="project.structure.last.edited" value="Project" />
-    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.proportion" value="0.15" />
     <property name="recentsLimit" value="5" />
     <property name="MemberChooser.sorted" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/PDDL4J-v1.0/examples/Graphplan/graphplan.jar!/" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
@@ -310,26 +324,26 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32993197" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.38225257" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38054606" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32935154" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32935154" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.13030303" sideWeight="0.6177474" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17727272" sideWeight="0.6194539" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32935154" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32993197" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
@@ -366,7 +380,7 @@
     <option name="INCLUDE_TEXT_INTO_PATCH" value="false" />
     <option name="INCLUDE_TEXT_INTO_SHELF" value="false" />
     <option name="SHOW_FILE_HISTORY_DETAILS" value="true" />
-    <option name="SHOW_VCS_ERROR_NOTIFICATIONS" value="true" />
+    <option name="SHOW_VCS_ERROR_NOTIFICATIONS" value="false" />
     <option name="SHOW_DIRTY_RECURSIVELY" value="false" />
     <option name="LIMIT_HISTORY" value="true" />
     <option name="MAXIMUM_HISTORY_ROWS" value="1000" />
@@ -399,9 +413,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/com/company/Size.java">
+    <entry file="file://$PROJECT_DIR$/src/com/company/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="20" selection-start="248" selection-end="248" vertical-scroll-proportion="0.0">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -446,23 +460,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/company/Parser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="32" column="48" selection-start="902" selection-end="902" vertical-scroll-proportion="-0.092857145">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/com/company/Shape.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="15" column="10" selection-start="265" selection-end="265" vertical-scroll-proportion="0.7589286">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/company/Size.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="14" selection-start="263" selection-end="263" vertical-scroll-proportion="0.7083333">
           <folding />
         </state>
       </provider>
@@ -474,53 +474,59 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/company/ExpressionParser.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="157" column="0" selection-start="7791" selection-end="7791" vertical-scroll-proportion="0.33126935">
-          <folding>
-            <element signature="e#7846#7854#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.7.0_15/src.zip!/java/util/PriorityQueue.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="632" column="0" selection-start="22784" selection-end="22784" vertical-scroll-proportion="0.33333334">
+        <state line="632" column="0" selection-start="22784" selection-end="22784" vertical-scroll-proportion="0.33333334" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/company/Parser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="29" column="27" selection-start="827" selection-end="827" vertical-scroll-proportion="1.4672619">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/com/company/Main.java">
+    <entry file="file://$PROJECT_DIR$/src/com/company/Size.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="37" column="49" selection-start="1536" selection-end="1536" vertical-scroll-proportion="0.0">
+        <state line="14" column="14" selection-start="263" selection-end="263" vertical-scroll-proportion="0.7062315">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/company/ExpressionParser.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="0" selection-start="622" selection-end="622" vertical-scroll-proportion="0.33333334">
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1953#1961#0" expanded="true" />
+            <element signature="e#673#682#0" expanded="true" />
+            <element signature="e#7846#7854#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/company/Node.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="57" column="32" selection-start="1112" selection-end="1112" vertical-scroll-proportion="0.7267857">
+        <state line="85" column="25" selection-start="1669" selection-end="1669" vertical-scroll-proportion="1.3531157">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/com/company/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="9" selection-start="659" selection-end="659" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/com/company/Planner.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="175" column="0" selection-start="7186" selection-end="7186" vertical-scroll-proportion="-6.105263">
+        <state line="47" column="70" selection-start="1857" selection-end="1857" vertical-scroll-proportion="0.7062315">
           <folding>
-            <element signature="e#350#359#0" expanded="true" />
-            <element signature="e#1305#1314#0" expanded="true" />
-            <element signature="e#3350#3359#0" expanded="true" />
-            <element signature="e#6557#6737#0" expanded="true" />
-            <element signature="e#6571#6577#0" expanded="true" />
-            <element signature="e#6725#6726#0" expanded="true" />
-            <element signature="e#6794#6800#0" expanded="true" />
-            <element signature="e#6991#6997#0" expanded="true" />
-            <element signature="e#8836#8842#0" expanded="true" />
-            <element signature="e#8904#8918#0" expanded="true" />
+            <element signature="e#279#288#0" expanded="true" />
+            <element signature="e#1968#1974#0" expanded="true" />
+            <element signature="e#2191#2197#0" expanded="true" />
+            <element signature="e#2389#2395#0" expanded="true" />
+            <element signature="e#6507#6513#0" expanded="true" />
+            <element signature="e#6575#6589#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -582,7 +588,6 @@
             <option name="proportions">
               <list>
                 <option value="0.2" />
-                <option value="0.5" />
               </list>
             </option>
           </splitter-proportions>

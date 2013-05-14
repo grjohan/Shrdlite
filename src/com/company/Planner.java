@@ -3,166 +3,62 @@ package com.company;
 import java.util.*;
 
 public class Planner {
-    String holding;
-    Entity currentlyHolding;
     String world;
-    String goal;
-    int q = 0;
+    Direction direction;
+    int location;
+    Entity relationBlock = null;
     HashMap<String, Entity> entities;
     Hashtable<String,Node> nodes;
-    ArrayList<ArrayList<Entity>> entityWorld;
-    String[] trees;
     ArrayList<Command> commands = new ArrayList<Command>();
-    Parser parser;
+    Entity[] blockToRemove;
 
-    public Planner(String holding, String world, String goal,HashMap<String, Entity> entities,ArrayList<ArrayList<Entity>> entityWorld ) {
-        this.holding = holding;
+    public Planner(String world, ArrayList<Command> commands,HashMap<String, Entity> entities) {
         this.world = world;
-        this.goal = goal;
+        this.commands = commands;
         this.entities = entities;
-        this.entityWorld = entityWorld;
         nodes = new Hashtable<String, Node>();
         // Print the data
         // if we are holding something, set that as currently_holding
-        if (!holding.equals("")) {
-            for (String name : entities.keySet()) {
-                if (holding.equals(name))
-                    currentlyHolding = entities.get(name);
-            }
-        }
     }
 
-    // --------------- here is code to carry out commands -----------------
-    private void CarryOutCommand(Command command) {    // find out where exactly my block is if I want to move or take something
-        ArrayList<Integer> allowedStacks = new ArrayList<Integer>();
-        for (int i = 0; i < 10; i++) {
-            allowedStacks.add(i);
+    private void ConstructGoalWorld(Node start) {
+        blockToRemove = new Entity[commands.size()];
+        String[] oldWorld = world.split(";");
+        String[] newWorld = new String[oldWorld.length];
+        world = "";
+        direction = commands.get(0).getDirection();
+        location = commands.get(0).getLocation();
+        relationBlock = commands.get(0).getRelationBlock();
+        for (int i = 0; i < commands.size(); i++) {
+            blockToRemove[i] = commands.get(i).getBlock();
         }
-        if (command.getMovement().equals(Movement.drop)) {
-            if (holding.equals(""))
-                return;
-            if (command.getDirection().equals(Direction.here)) {
-                PlaceBlock(command.getLocation(), currentlyHolding);
-                return;
-            } else if (command.getDirection().equals(Direction.right)) {
-                for (int i = command.getLocation(); i > -1; i--) {
-                    allowedStacks.remove((Integer) i);
-                }
-            } else if (command.getDirection().equals(Direction.left)) {
-                for (int i = command.getLocation(); i < 10; i++) {
-                    allowedStacks.remove((Integer) i);
-                }
+        if(start.isHolding())
+            blockToRemove[0] = entities.get(start.getHoldingBlock());
+        for (int i = 0; i < oldWorld.length; i++) {
+            newWorld[i] = oldWorld[i];
+            for (int j = 0; j < blockToRemove.length; j++) {
+                String block = blockToRemove[j].getName();
+                newWorld[i] = newWorld[i].replaceAll(block, "");
             }
-            int stack = FindSupportingStack(currentlyHolding, command.getLocation(), allowedStacks);
-            DropBlock(stack);
-            return;
+            world += newWorld[i] + ";";
         }
-        int stack = command.getBlock().getStack();
-        int indexInStack = command.getBlock().getIndexInStack();
+        world = world.substring(0, world.length() - 1);
 
-        if (command.getMovement().equals(Movement.pick)) {
-            // check if we are already holding something, in that case drop it
-            if (!holding.equals("")) {
-                DropBlock(FindSupportingStack(currentlyHolding, stack, allowedStacks));
-            }
-
-            if (!(indexInStack == entityWorld.get(stack).size() - 1)) {
-                // move all the thing above it to an empty space
-                for (int i = entityWorld.get(stack).size() - 1; i > indexInStack; i--) {
-                    int moveTo = FindSupportingStack(entityWorld.get(stack).get(i), stack, allowedStacks);
-                    PickBlock(entityWorld.get(stack).get(i), stack);
-                    DropBlock(moveTo);
-                }
-
-            }
-            PickBlock(entityWorld.get(stack).get(indexInStack), stack);
-
-        }
+        // TODO fix so that ontop/under command has blocks on top as don't care terms if they do not fit back on top
+        // TODO fix in parser so that it understands the command floor
     }
 
-    private void PlaceBlock(int stack, Entity block) {
-        ArrayList<Integer> allowedStacks = new ArrayList<Integer>();
-        for (int i = 0; i < 10; i++) {
-            allowedStacks.add(i);
-        }
-        Entity currentTopBlock = entityWorld.get(stack).get(entityWorld.get(stack).size() - 1);
-        if (!CanSupport(block, currentTopBlock)) {
-            Entity blockToDrop = currentlyHolding;
-            int whereWeDropped = FindSupportingStack(currentlyHolding, stack, allowedStacks);
-            DropBlock(whereWeDropped);
-            allowedStacks.remove((Integer) whereWeDropped);
-            while (!CanSupport(blockToDrop, currentTopBlock)) {
-                int moveTo = FindSupportingStack(currentTopBlock, stack, allowedStacks);
-                PickBlock(currentTopBlock, stack);
-                DropBlock(moveTo);
-                currentTopBlock = entityWorld.get(stack).get(entityWorld.get(stack).size() - 1);
-            }
-            PickBlock(block, block.getStack());
-        }
-
-        DropBlock(stack);
-    }
-
-    private void PickBlock(Entity block, int stack) {
-        holding = block.getName();
-        currentlyHolding = block;
-        entityWorld.get(stack).remove(entityWorld.get(stack).size() - 1);
-        System.out.println("pick " + stack);
-    }
-
-    private void DropBlock(int stack) {
-        System.out.println("drop " + stack);
-        currentlyHolding.setStack(stack);
-        currentlyHolding.setIndexInStack(entityWorld.get(stack).size() - 1);
-        entityWorld.get(stack).add(currentlyHolding);
-        holding = "";
-        currentlyHolding = null;
-    }
-
-    private int FindSupportingStack(Entity block, int currentStack, ArrayList<Integer> allowedStacks) {
-        int plusMinus = 1;
-        while (plusMinus < 8) {
-            if (allowedStacks.contains(currentStack - plusMinus)) {
-                if (entityWorld.get(currentStack - plusMinus).size() == 0) {
-                    return currentStack - plusMinus;
-                }
-                if (CanSupport(block, entityWorld.get(currentStack - plusMinus).get(entityWorld.get(currentStack - plusMinus).size() - 1))) {
-                    return currentStack - plusMinus;
-                }
-            }
-            if (allowedStacks.contains(currentStack + plusMinus)) {
-                if (entityWorld.get(currentStack + plusMinus).size() == 0) {
-                    return currentStack + plusMinus;
-                }
-                if (CanSupport(block, entityWorld.get(currentStack + plusMinus).get(entityWorld.get(currentStack + plusMinus).size() - 1))) {
-                    return currentStack + plusMinus;
-                }
-            }
-            plusMinus++;
-        }
-        return Integer.MAX_VALUE; // if we are here to block cannot be placed anywhere
-        // check the stacks next to it to see if we can put it there, put it in the closes accepting stack
-    }
-
-    // Returns true if the block1 can be supported by the block2
-    private Boolean CanSupport(Entity block1, Entity block2) {
-        if (block2.getShape() == Shape.Ball || block2.getShape() == Shape.Pyramid)
-            return false;
-        return block2.getSize().getValue() >= block1.getSize().getValue();
-    }
-
-
-     public String GraphSearch(Node start, String goal)
+     public String GraphSearch(Node start)
      {
-         Comparator<Node> compareNodes = new Comparator<Node>() {
+       Comparator<Node> compareNodes = new Comparator<Node>() {
              @Override
              public int compare(Node o1, Node o2) {
                  return o1.getValue() - o2.getValue();
              }
          };
        PriorityQueue<Node> frontier = new PriorityQueue<Node>(100000,compareNodes);
-
-       //ArrayList<Node> frontier =  new ArrayList<Node>();
+       ConstructGoalWorld(start);
+       SetNodeValue(start);
        start.setFromNode(null);
        frontier.add(start);
        ArrayList<Node> explored = new ArrayList<Node>();
@@ -171,12 +67,7 @@ public class Planner {
            if(frontier.size() == 0)
                return "No plan found";
            Node test = frontier.poll();
-           if (++q == 10000)
-           {
-               int x = 1;
-           }
-
-           if(test.getState().equals(goal))
+           if(test.getValue() == test.getWeightUntilHere())
            {
                String actions = "";
                while (test.getFromNode() != null)
@@ -193,112 +84,217 @@ public class Planner {
                if (! frontier.contains(node) && !explored.contains(node))
                {
                    node.setFromNode(test);
-                   SetNodeValue(node,goal);
+                   node.setWeightUntilHere(test.getWeightUntilHere()+1);
+                   SetNodeValue(node);
                    frontier.add(node);
                }
            }
        }
      }
 
-    private void SetNodeValue(Node node, String goal)
+    private void SetNodeValue(Node node)
     {
-       int value = 0;
-       String[] state = node.getState().split(";");
-       String[] goals = goal.split(";");
-       for (int i = 0; i < state.length - 1; i++)
-       {
-         char one,two;
-         int min = Math.min(state[i].length(),goals[i].length());
-         int max = Math.max(state[i].length(),goals[i].length());
-         value += max-min;
-         for(int j = 0; j < min; j++)
-         {
-             one = state[i].charAt(j);
-             two = goals[i].charAt(j);
-             if (one != two)
-                 value++;
-         }
-       }
-        node.setValue(value);
+        int value = 0;
+        String[] state = node.getState().split(";");
+        String[] goals = world.split(";");
+        // calculate differences with all the concerned blocks just gone
+        for (int i=0; i< goals.length; i++)
+        {
+            // go through goals list, if something is in a place where it is not in initialState, wrong!
+            for (int j = 0; j < goals[i].length(); j++) {
+                char one = goals[i].charAt(j);
+                char two = 'Q';
+                if (state[i].length() > j) {
+                    two = state[i].charAt(j);
+                }
+                if (one != two)
+                    value++;
+            }
+        }
+        // calculate number of concerned blocks in the wrong place
+        value += blockToRemove.length;
+        if (direction == null && node.isHolding())
+        {
+            if (node.getHoldingBlock().equals(blockToRemove[0].getName()))
+                value--;
+        }
+        else if (direction == Direction.here) {
+            for (int i = 0; i < state[location].length() ; i++)
+            {
+                for(Entity block: blockToRemove)
+                {
+                    String name = block.getName();
+                    if (state[location].charAt(i) == name.charAt(0))
+                        value--;
+                }
+            }
+        } else if (direction == Direction.under) {
+            for(int i = 0; i < state[location].length(); i++)
+            {
+                char one = state[location].charAt(i);
+                if(one == relationBlock.getName().charAt(0))
+                    break;
+                for(Entity block : blockToRemove)
+                {
+                    String name = block.getName();
+                    if (state[location].charAt(i) == name.charAt(0))
+                        value--;
+                }
+            }
+        } else if (direction == Direction.right) {
+           for(int i = state.length-1; i > location; i-- )
+           {
+               for(int j = 0; j < state[i].length(); j++)
+               {
+                   for(Entity block: blockToRemove)
+                   {
+                       String name = block.getName();
+                       if (state[i].charAt(j) == name.charAt(0))
+                           value--;
+                   }
+               }
+           }
+        } else if (direction == Direction.left) {
+            for(int i = 0; i < location; i++)
+            {
+                for(int j = 0; j < state[i].length(); j++)
+                {
+                    for(Entity block: blockToRemove)
+                    {
+                        String name = block.getName();
+                        if (state[i].charAt(j) == name.charAt(0))
+                            value--;
+                    }
+                }
+            }
+        }
+        node.setValue(value+node.getWeightUntilHere());
     }
 
-    private ArrayList<Node> ExpandNode(Node node)
-    {
+    private ArrayList<Node> ExpandNode(Node node) {
         String currentState = node.getState();
         String[] stacks = currentState.split(";");
         ArrayList<Node> neighborsToReturn = new ArrayList<Node>();
         Dictionary<Node, String> neighbors = new Hashtable<Node, String>();
         // loop through all stacks, we can only take an action for the top of each stack
-        for (int i = 0; i < stacks.length - 1; i++) {
+        for (int i = 0; i < stacks.length; i++) {
             String modifiedStacks = "";
             if ((stacks[i].length() > 1)) {
-                String currentStack = stacks[i];
-                Node temp;
-                // actions include are
-                // lifting it and holding it, create a node for that
-                if(! node.isHolding())
+                if(!node.isHolding())
                 {
+                    String currentStack = stacks[i];
+                    Node temp;
+                    String holdingBlock = currentStack.substring(currentStack.length()-1);
+                    // actions include are
+                    // lifting it and holding it, create a node for that
                     for (int j = 0; j < stacks.length; j++) {
                         if (i != j)
                             modifiedStacks += stacks[j] + ";";
                         else
                             modifiedStacks += currentStack.substring(0, currentStack.length() - 1) + ";";
                     }
-
                     if (nodes.containsKey(modifiedStacks)) {
                         temp = nodes.get(modifiedStacks);
                         temp.setHolding(true);
-                        neighbors.put(temp, "pick " + i);
+                        temp.setHoldingBlock(holdingBlock);
+                        neighbors.put(temp, "pick " + i + ";");
                         neighborsToReturn.add(temp);
                     } else {
 
                         temp = new Node();
                         temp.setState(modifiedStacks);
                         temp.setHolding(true);
-                        neighbors.put(temp, "pick " + i);
+                        temp.setHoldingBlock(holdingBlock);
+                        nodes.put(modifiedStacks,temp);
+                        neighbors.put(temp, "pick " + i + ";");
                         neighborsToReturn.add(temp);
                     }
-                }
+                    String thisStack = stacks[i].substring(0, stacks[i].length() - 1);
+                    Entity topBlock = entities.get(stacks[i].substring(stacks[i].length() - 1));
+                    for (int j = 0; j < stacks.length; j++) {
+                        if (!(j == i)) {
+                            modifiedStacks = "";
+                            String stackToPlaceAt = stacks[j];
+                            Entity thisStacksTop = entities.get(stacks[j].substring(stacks[j].length() - 1));
+                            // if it is not a pyramid, ball and is equal or less size than that stacks top
+                            if (CanPutOn(topBlock,thisStacksTop)) {
+                                    stackToPlaceAt += topBlock.getName();
+                                    for (int z = 0; z < stacks.length; z++) {
+                                        if (z == j)
+                                            modifiedStacks += stackToPlaceAt + ";";
+                                        else if (z == i)
+                                            modifiedStacks += thisStack + ";";
+                                        else
+                                            modifiedStacks += stacks[z] + ";";
+                                    }
+                                    if (nodes.containsKey(modifiedStacks)) {
+                                        temp = nodes.get(modifiedStacks);
+                                        neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                        neighborsToReturn.add(temp);
+                                    } else {
 
-                String thisStack = stacks[i].substring(0, stacks[i].length() - 1);
-                Entity topBlock = entities.get(stacks[i].substring(stacks[i].length() - 1));
-                for (int j = 0; j < stacks.length - 1; j++) {
-                    modifiedStacks = "";
-                    String stackToPlaceAt = stacks[j];
-                    Entity thisStacksTop = entities.get(stacks[j].substring(stacks[j].length() - 1));
-                    // if it is not a pyramid, ball and is equal or less size than that stacks top
-                    if( (thisStacksTop.getShape() != Shape.Pyramid || thisStacksTop.getShape() != Shape.Ball) && topBlock.getSize().getValue() <= thisStacksTop.getSize().getValue())
-                    {
-                        //    if it is a box, it has to be strictly less than that stacks top
-                        if( !(topBlock.getShape() == Shape.Box && topBlock.getSize().getValue() > thisStacksTop.getSize().getValue()))
-                        {
-                            stackToPlaceAt += topBlock.getName();
-                            for (int z = 0; z < stacks.length; z++) {
-                                if (z == j)
-                                    modifiedStacks += stackToPlaceAt + ";";
-                                else if (z == i)
-                                    modifiedStacks += thisStack + ";";
+                                        temp = new Node();
+                                        temp.setState(modifiedStacks);
+                                        neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                        nodes.put(modifiedStacks,temp);
+                                        neighborsToReturn.add(temp);
+                                    }
+
+                            }
+                        }
+                    }
+                }
+                else if (node.isHolding())
+                {
+                    String currentStack = stacks[i];
+                    Node temp;
+                    // since we are holding something, the only action we can take is dropping it
+                    // can only be done if it adheres to the rules
+                    Entity currentlyHolding = entities.get(node.getHoldingBlock());
+                    Entity blockToPutAt = entities.get(currentStack.substring(currentStack.length()-1));
+                    if (CanPutOn(currentlyHolding, blockToPutAt)) {
+                            for (int j = 0; j < stacks.length; j++) {
+                                if (i != j)
+                                    modifiedStacks += stacks[j] + ";";
                                 else
-                                    modifiedStacks += stacks[z] + ";";
+                                    modifiedStacks += currentStack + node.getHoldingBlock() + ";";
                             }
                             if (nodes.containsKey(modifiedStacks)) {
                                 temp = nodes.get(modifiedStacks);
-                                neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                temp.setHolding(false);
+                                temp.setHoldingBlock("");
+                                neighbors.put(temp, "drop " + i + ";");
                                 neighborsToReturn.add(temp);
                             } else {
 
                                 temp = new Node();
                                 temp.setState(modifiedStacks);
-                                neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                temp.setHolding(false);
+                                temp.setHoldingBlock("");
+                                neighbors.put(temp, "drop " + i + ";");
                                 neighborsToReturn.add(temp);
+                                nodes.put(modifiedStacks,temp);
                             }
-                        }
+
+
                     }
+
                 }
             }
         }
-      node.setNeighbors(neighbors);
-      return neighborsToReturn;
+        node.setNeighbors(neighbors);
+        return neighborsToReturn;
+    }
+
+    private Boolean CanPutOn(Entity blockToPlace, Entity blockToPlaceAt)
+    {
+        if(blockToPlaceAt.getShape() == Shape.Pyramid || blockToPlaceAt.getShape() == Shape.Ball)
+            return false;
+        if(blockToPlace.getShape() == Shape.Box && blockToPlaceAt.getSize().getValue() <= blockToPlace.getSize().getValue())
+            return false;
+        if(blockToPlace.getSize().getValue() > blockToPlaceAt.getSize().getValue())
+            return false;
+        return true;
     }
 
 }
