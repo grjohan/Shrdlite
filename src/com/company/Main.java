@@ -7,17 +7,14 @@ public class Main {
     static String world;
     static HashMap<String, Entity> entities;
     static ArrayList<ArrayList<Entity>> entityWorld;
-    static Entity floor =  new Entity(Shape.Floor, Colour.Black, Size.floor, "X");
-    public static void main(String[] args) {
+    static Entity floor =  new Entity(Shape.floor, Colour.black, Size.floor, "X");
+    public static void main(String[] args) throws ParserErrorException {
 
        String[] trees;
        String holding;
-       holding = "";
-       world = "h,g,f,a ; b ; c,d ; ; e,i ; ; ; j,k ; ; l,m";
-       trees = "( move ( the ( block square large red ) ) ( inside ( the ( block box large white ) ) ) )".split(";");
-       //holding = args[0];
-       //world = args[1];
-       //trees = args[2].split(";");
+       holding = args[0];
+       world = args[1];
+       trees = args[2].split(";");
 
         System.out.println("# Group 19's Decent Java Planner!");
         System.out.println("# Holding: " + holding);
@@ -29,10 +26,6 @@ public class Main {
         entityWorld = new ArrayList<ArrayList<Entity>>();
         CreateEntities();
         PlaceEntities();
-        Parser parser = new Parser(trees[0]);
-        ExpressionParser exp = new ExpressionParser(entities);
-        Expression ex = parser.MakeExpressions();
-
         String[] newWorld = world.split(";");
         world = "";
         for(int i = 0; i < newWorld.length; i++)
@@ -41,7 +34,27 @@ public class Main {
             world += newWorld[i] + ";";
         }
         world = world.substring(0,world.length()-1);
-        ArrayList<Command> commands = exp.ParseExpression(ex, false);
+        ArrayList<String> workingTrees = new ArrayList<String>();
+        HashMap<String,Command> treeToCommand = new HashMap<String, Command>();
+        ArrayList<String> errorMessages = new ArrayList<String>();
+        for (String tree : trees) {
+            try {
+                Parser parser = new Parser(tree);
+                ExpressionParser exp = new ExpressionParser(entities, entities.get(holding), newWorld);
+                Expression ex = parser.MakeExpressions();
+                Command command = exp.ParseExpression(ex);
+                workingTrees.add(tree);
+                treeToCommand.put(tree, command);
+            } catch (Exception e) {
+                errorMessages.add(e.getMessage());
+            }
+        }
+        if (workingTrees.size() == 0)
+        {
+            for(String message : errorMessages)
+            System.out.println(message);
+            System.exit(0);
+        }
         Node start = new Node();
         start.setState(world);
         start.setWeightUntilHere(0);
@@ -50,7 +63,7 @@ public class Main {
             start.setHolding(true);
             start.setHoldingBlock(holding);
         }
-        Planner planner = new Planner(world,commands,entities);
+        Planner planner = new Planner(world,treeToCommand.get(workingTrees.get(0)),entities);
         String[] actions = planner.GraphSearch(start).split(";");
         for(int i = actions.length-1; i >= 0; i--)
         {
@@ -115,30 +128,42 @@ public class Main {
 
             }
         }
+        // put "the floor" as the place with the least blocks on it
+        int minStack = Integer.MAX_VALUE, minStackValue = Integer.MAX_VALUE;
+        for (int i = 0; i < stacks.length ; i++)
+        {
+            if (stacks[i].length() < minStackValue)
+            {
+                minStack = i;
+                minStackValue = stacks[i].length();
+            }
+        }
+        entities.get("X").setStack(minStack);
+        entities.get("X").setIndexInStack(0);
     }
 
     private static void AddEntity(String name, int stack, int index) {
         entities.get(name).setStack(stack);
-        entities.get(name).setIndexInStack(index);
+        entities.get(name).setIndexInStack(index+1);
         entityWorld.get(stack).add(entities.get(name));
     }
 
     // Only hard coded things that have to do with the world below this point
     private static void CreateEntities() {   // create the entities given in world.js
         entities = new HashMap<String, Entity>();
-        entities.put("a", new Entity(Shape.Rectangle, Colour.Blue, Size.tall, "a"));
-        entities.put("b", new Entity(Shape.Ball, Colour.White, Size.small, "b"));
-        entities.put("c", new Entity(Shape.Square, Colour.Red, Size.large, "c"));
-        entities.put("d", new Entity(Shape.Pyramid, Colour.Green, Size.large, "d"));
-        entities.put("e", new Entity(Shape.Box, Colour.White, Size.large, "e"));
-        entities.put("f", new Entity(Shape.Rectangle, Colour.Black, Size.wide, "f"));
-        entities.put("g", new Entity(Shape.Rectangle, Colour.Blue, Size.wide, "g"));
-        entities.put("h", new Entity(Shape.Rectangle, Colour.Red, Size.wide, "h"));
-        entities.put("i", new Entity(Shape.Pyramid, Colour.Yellow, Size.medium, "i"));
-        entities.put("j", new Entity(Shape.Box, Colour.Red, Size.large, "j"));
-        entities.put("k", new Entity(Shape.Ball, Colour.Yellow, Size.small, "k"));
-        entities.put("l", new Entity(Shape.Box, Colour.Red, Size.medium, "l"));
-        entities.put("m", new Entity(Shape.Ball, Colour.Blue, Size.medium, "m"));
+        entities.put("a", new Entity(Shape.rectangle, Colour.blue, Size.tall, "a"));
+        entities.put("b", new Entity(Shape.ball, Colour.white, Size.small, "b"));
+        entities.put("c", new Entity(Shape.square, Colour.red, Size.large, "c"));
+        entities.put("d", new Entity(Shape.pyramid, Colour.green, Size.large, "d"));
+        entities.put("e", new Entity(Shape.box, Colour.white, Size.large, "e"));
+        entities.put("f", new Entity(Shape.rectangle, Colour.black, Size.wide, "f"));
+        entities.put("g", new Entity(Shape.rectangle, Colour.blue, Size.wide, "g"));
+        entities.put("h", new Entity(Shape.rectangle, Colour.red, Size.wide, "h"));
+        entities.put("i", new Entity(Shape.pyramid, Colour.yellow, Size.medium, "i"));
+        entities.put("j", new Entity(Shape.box, Colour.red, Size.large, "j"));
+        entities.put("k", new Entity(Shape.ball, Colour.yellow, Size.small, "k"));
+        entities.put("l", new Entity(Shape.box, Colour.red, Size.medium, "l"));
+        entities.put("m", new Entity(Shape.ball, Colour.blue, Size.medium, "m"));
         entities.put("X", floor);
     }
 }

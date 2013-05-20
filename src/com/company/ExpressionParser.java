@@ -1,91 +1,174 @@
 package com.company;
 
-import com.sun.media.sound.DirectAudioDeviceProvider;
-
-import java.awt.image.AreaAveragingScaleFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
-/**
- * Created with IntelliJ IDEA.
- * User: Johan
- * Date: 2013-05-09
- * Time: 09:32
- * To change this template use File | Settings | File Templates.
- */
 public class ExpressionParser {
     HashMap<String, Entity> entities;
+    Entity currentlyHolding;
+    String[] world;
 
-    public ExpressionParser(HashMap<String, Entity> entities) {
+    public ExpressionParser(HashMap<String, Entity> entities, Entity currentlyHolding, String[] world) {
         this.entities = entities;
+        this.currentlyHolding = currentlyHolding;
+        this.world = world;
     }
 
-    public ArrayList<Command> ParseExpression(Expression expression, boolean many) {
-        ArrayList<Command> commands = new ArrayList<Command>();
+    public Command ParseExpression(Expression expression) throws ParserErrorException {
         String thisExpression = expression.getThisCommand();
         if (thisExpression.equalsIgnoreCase("take") || thisExpression.equalsIgnoreCase("put")) {
-            // if take and the next is all, that is an error
+
             Movement movement = Movement.pick;
             if (thisExpression.equalsIgnoreCase("put"))
+            {
                 movement = Movement.drop;
-            commands = ParseExpression(expression.getSubExpressionOne(), many);
-            if (thisExpression.equalsIgnoreCase("take") && commands.size() > 1)
-                ExitWithError("It is not possible to pick \"All\"");
-            for (Command command : commands)
-                command.setMovement(movement);
-            return commands;
-        } else if (thisExpression.equalsIgnoreCase("move")) {
-            ArrayList<Command> from = ParseExpression(expression.getSubExpressionOne(), many);
-            Command to = ParseExpression(expression.getSubExpressionTwo(), many).get(0);
-            for (Command command : from) {
-                Shape shape = command.getBlock().getShape();
-                if ((shape.equals(Shape.Pyramid) || shape.equals(Shape.Ball)) && to.getDirection().equals(Direction.under))
-                    ExitWithError("Can not place pyramids or balls under anything.");
-                command.setMovement(Movement.move);
-                command.setLocation(to.getLocation());
-                command.setDirection(to.getDirection());
-                command.setRelationBlock(to.getRelationBlock());
             }
+            Command command = ParseExpression(expression.getSubExpressionOne());
+            // if the command was take, and we are given more than one object, there is an error
+            if (thisExpression.equalsIgnoreCase("take") && command.getBlockDeterminer().equalsIgnoreCase("all"))
+                ExitWithError("It is not possible to pick \"All\"");
+               if (movement == Movement.drop)
+               {
+                   Entity blockToPut = currentlyHolding;
+                   // special case if you want to put something under all blocks
+                   if (command.getRelationBlocksDeterminer().equalsIgnoreCase("all")) {
+                       // check so that all of them are in a stack then apply rules to bottom one
+                       int stack = Integer.MAX_VALUE;
+                       int lowestStackIndex = Integer.MAX_VALUE;
+                       int highestStackIndex = Integer.MAX_VALUE;
+                       Entity lowestBlock = command.getRelationBlocks().get(0);
+                       Entity highestBlock = command.getRelationBlocks().get(0);
+                       for (Entity possiblyStackedBlock : command.getRelationBlocks()) {
+                           if (lowestStackIndex > possiblyStackedBlock.getIndexInStack()) {
+                               lowestStackIndex = possiblyStackedBlock.getIndexInStack();
+                               lowestBlock = possiblyStackedBlock;
+                           }
+                           if (highestStackIndex < possiblyStackedBlock.getIndexInStack()) {
+                               highestStackIndex = possiblyStackedBlock.getIndexInStack();
+                               highestBlock = possiblyStackedBlock;
+                           }
+                           if (stack == Integer.MAX_VALUE)
+                               stack = possiblyStackedBlock.getStack();
+                           else if (stack != possiblyStackedBlock.getStack())
+                               ExitWithError("Cannot place it under \"All\" since they are not in the same stack");
+                       }
+                       if(command.getDirection() == Direction.under)
+                       {
+                           ArrayList<Entity> temp = new ArrayList<Entity>();
+                           temp.add(lowestBlock);
+                           command.setRelationBlocks(temp);
+                       } else if (command.getDirection() == Direction.here)
+                       {
+                           ArrayList<Entity> temp = new ArrayList<Entity>();
+                           temp.add(highestBlock);
+                           command.setRelationBlocks(temp);
+                       }
+
+                   }
+                   else if (command.getRelationBlocksDeterminer().equalsIgnoreCase("any"))
+                   {
+                       //Check which block follows the rules, and pick one of those.
+                       ArrayList<Entity> blocksThatWork = new ArrayList<Entity>();
+                       for(Entity temp : command.getRelationBlocks())
+                       {
+                           String ans = CheckRules(blockToPut,temp,command.getDirection());
+                           if(ans.equalsIgnoreCase("OK"))
+                                blocksThatWork.add(temp);
+                       }
+                       if(blocksThatWork.size() == 0)
+                           ExitWithError("There are no blocks that work, sorry");
+                       else
+                       {
+                           ArrayList<Entity> temp = new ArrayList<Entity>();
+                           temp.add(blocksThatWork.get(0));
+                           command.setRelationBlocks(temp);
+                           System.out.println("Since the word any was used : " + BlockString(temp.get(0)) + " was picked, if another one is desired, please rephrase");
+                           command.setLocation(temp.get(0).getStack());
+                       }
+                   }
+
+
+               }
+                else if( movement == Movement.pick)
+               {
+                   if (command.getBlockDeterminer().equalsIgnoreCase("all"))
+                   {
+                        ExitWithError("Cannot pick up more than one block");
+                   }
+                   else if (command.getBlockDeterminer().equalsIgnoreCase("any")) {
+                       ArrayList<Entity> temp = new ArrayList<Entity>();
+                       temp.add(FindMostAccesibleBlock(command.getBlocks()));
+                       command.setBlocks(temp);
+                   }
+
+               }
+                command.setMovement(movement);
+                if(movement == Movement.drop)
+                    command.addBlock(currentlyHolding);
+            return command;
+        } else if (thisExpression.equalsIgnoreCase("move")) {
+            Command from = ParseExpression(expression.getSubExpressionOne());
+            Command to = ParseExpression(expression.getSubExpressionTwo());
+            for (Entity block : from.getBlocks()) {
+                ArrayList<Entity> entitiesThatFit = new ArrayList<Entity>();
+                for(Entity blockDestination : to.getRelationBlocks())
+                {
+                    String ans = CheckRules(block,blockDestination,to.getDirection());
+                    if(ans.equalsIgnoreCase("ok"))
+                    {
+                        entitiesThatFit.add(blockDestination);
+                    }
+                }
+                if(entitiesThatFit.size() == 0)
+                {
+                    ExitWithError("There was nothing that fit this description");
+                }
+                to.setLocation(entitiesThatFit.get(0).getStack());
+                to.setRelationBlocks(entitiesThatFit);
+            }
+            if (to.getRelationBlocksDeterminer().equalsIgnoreCase("any") && to.getRelationBlocks().size() >1)
+            {
+                System.out.println("There were many blocks that fit this description that worked, so " + BlockString(to.getRelationBlocks().get(0)) + " was chosen. If a different one is desired please rephrase.");
+            }
+            from.setMovement(Movement.move);
+            from.setLocation(to.getLocation());
+            from.setDirection(to.getDirection());
+            ArrayList<Entity> temp = new ArrayList<Entity>();
+            for (Entity block : to.getRelationBlocks()) {
+                temp.add(block);
+            }
+            from.setRelationBlocks(temp);
             return from;
 
         } else if (thisExpression.equalsIgnoreCase("thatis")) {
             String[] blockDescription = expression.getSubExpressionOne().getThisCommand().split(" ");
             ArrayList<Entity> blocks = FindBlocks(blockDescription[2], blockDescription[3], blockDescription[1]);
             ArrayList<Entity> blocksThatFit = new ArrayList<Entity>();
-            Command command = ParseExpression(expression.getSubExpressionTwo(), many).get(0);
+            Command command = ParseExpression(expression.getSubExpressionTwo());
+            Entity LimiterBlock = command.getRelationBlocks().get(0);
             Direction direction = command.getDirection();
             if (direction.equals(Direction.here)) {
                 for (Entity block : blocks) {
-                    if (block.getStack() == command.getBlock().getStack() && block.getIndexInStack() > command.getBlock().getIndexInStack())
+                    if (block.getStack() == LimiterBlock.getStack() && block.getIndexInStack() > LimiterBlock.getIndexInStack())
                         blocksThatFit.add(block);
                 }
             } else if (direction.equals(Direction.left)) {
                 for (Entity block : blocks) {
-                    if (block.getStack() < command.getBlock().getStack())
+                    if (block.getStack() < command.getLocation())
                         blocksThatFit.add(block);
                 }
             } else if (direction.equals(Direction.right)) {
                 for (Entity block : blocks) {
-                    if (block.getStack() > command.getBlock().getStack())
+                    if (block.getStack() > command.getLocation())
                         blocksThatFit.add(block);
                 }
             }
 
             if (blocksThatFit.size() == 0) {
-                ExitWithError("There were not blocks that fit that description");
+                ExitWithError("There were no blocks that fit that description");
             }
-            for (Entity block : blocksThatFit) {
-                Command temp = new Command();
-                command.setBlock(block);
-                commands.add(command);
-            }
-            if (!many) {
-                Command temp = commands.get(0);
-                commands.clear();
-                commands.add(temp);
-            }
-            return commands;
+            command.setBlocks(blocksThatFit);
+            return command;
         } else if (thisExpression.equalsIgnoreCase("leftof") || thisExpression.equalsIgnoreCase("inside") || thisExpression.equalsIgnoreCase("ontop") || thisExpression.equalsIgnoreCase("rightof") || thisExpression.equalsIgnoreCase("under")) {
             Direction direction = Direction.here;
             if (thisExpression.equalsIgnoreCase("leftof"))
@@ -94,60 +177,105 @@ public class ExpressionParser {
                 direction = Direction.right;
             else if (thisExpression.equalsIgnoreCase("under"))
                 direction = Direction.under;
-            Command temp = ParseLocation(expression.getSubExpressionOne(), direction);
-            commands.add(temp);
-            return commands;
+            return ParseLocation(expression.getSubExpressionOne(), direction);
         } else if (thisExpression.contains("block")) {
             String[] blockDescription = thisExpression.split(" ");
             ArrayList<Entity> blocks = FindBlocks(blockDescription[2], blockDescription[3], blockDescription[1]);
-            for (Entity block : blocks) {
-                Command command = new Command();
-                command.setBlock(block);
-                commands.add(command);
+            Command command = new Command();
+            command.setBlocks(blocks);
+            return command;
+        } else if (thisExpression.equalsIgnoreCase("the") || thisExpression.equalsIgnoreCase("any") || thisExpression.equalsIgnoreCase("all") ) {
+            Command temp = ParseExpression(expression.getSubExpressionOne());
+            temp.setBlockDeterminer(thisExpression);
+            if (thisExpression.equalsIgnoreCase("the") && temp.getBlocks().size() > 1) {
+                String errorString = "Please clarify if you meant the ";
+                for (Entity block : temp.getBlocks()) {
+                    errorString += BlockString(block) + " or the ";
+                }
+                errorString = errorString.substring(0, errorString.length() - 8);
+                ExitWithError(errorString);
             }
-            return commands;
-        } else if (thisExpression.equalsIgnoreCase("the") || thisExpression.equalsIgnoreCase("any")) {
-            return ParseExpression(expression.getSubExpressionOne(), false);
-        } else if (thisExpression.equalsIgnoreCase("all")) {
-            return ParseExpression(expression.getSubExpressionOne(), true);
+            return temp;
+        }else if (thisExpression.equalsIgnoreCase("ontop floor")){
+            Command command = new Command();
+            Entity block = entities.get("X");
+            command.setLocation(block.getStack());
+            command.addRelationBlock(block);
+            command.setDirection(Direction.here);
+            return command;
+        } else if (thisExpression.equalsIgnoreCase("take floor")){
+            ExitWithError("Cannot take the floor");
+        } else if (thisExpression.equalsIgnoreCase("under floor")){
+            ExitWithError("Cannot put anything under the floor");
         }
-        ExitWithError("Something went terribly wrong, Thank god!");
+
         return null;  // we should never ever get here
     }
 
-    private Command ParseLocation(Expression expression, Direction direction) {
+    private Command ParseLocation(Expression expression, Direction direction) throws ParserErrorException {
         // a location is the/any/all
         Command command = new Command();
+        if( expression.getSubExpressionOne().thisCommand.equalsIgnoreCase("thatis"))
+            return ParseExpression(expression.getSubExpressionOne());
         command.setDirection(direction);
         String thisExpression = expression.getThisCommand();
         String[] block = expression.getSubExpressionOne().getThisCommand().split(" ");
         ArrayList<Entity> blocks = FindBlocks(block[2], block[3], block[1]);
         if (thisExpression.equalsIgnoreCase("all")) {
+            command.setRelationBlocksDeterminer("all");
             if (direction.equals(Direction.left)) {
+                ArrayList<Entity> temp = new ArrayList<Entity>();
+                temp.add(blocks.get(0));
                 command.setLocation(blocks.get(0).getStack());
+                command.setRelationBlocks(temp);
             } else if (direction.equals(Direction.here)) {
-                ExitWithError("It is not possibly to put a block inside \"all\" of something");
+                ExitWithError("It is not possibly to put a block inside/on top of  \"all\" of something");
             } else if (direction.equals(Direction.right)) {
+                ArrayList<Entity> temp = new ArrayList<Entity>();
+                temp.add(blocks.get(blocks.size() - 1));
                 command.setLocation(blocks.get(blocks.size() - 1).getStack());
-            } else if (direction.equals(Direction.under)) {
-                Entity temp = blocks.get(0);
-                command.setLocation(temp.getStack());
-                command.setRelationBlock(temp);
+                command.setRelationBlocks(temp);
+            } else if (direction.equals(Direction.under) || direction.equals(Direction.here)) {
+                command.setRelationBlocks(blocks);
             }
         } else {
+            if(thisExpression.equalsIgnoreCase("the"))
+                command.setRelationBlocksDeterminer("the");
+            else
+                command.setRelationBlocksDeterminer("any");
+            if(thisExpression.equalsIgnoreCase("the") && blocks.size() > 1)
+            {
+                String errorString = "There was more than one choice: did you mean ";
+                for(Entity temp : blocks)
+                {
+                    errorString += BlockString(temp) + " or ";
+                }
+                errorString = errorString.substring(0,errorString.length()-4);
+                ExitWithError(errorString);
+            }
             if (direction.equals(Direction.left)) {
+                ArrayList<Entity> temp = new ArrayList<Entity>();
+                temp.add(blocks.get(blocks.size() - 1));
+                command.setRelationBlocks(temp);
                 command.setLocation(blocks.get(blocks.size() - 1).getStack());
             } else if (direction.equals(Direction.here)) {
                 command.setDirection(Direction.here);
                 if (block[1].equals("pyramid") || block[1].equals("ball"))
                     ExitWithError("Can not put objects on/ balls or pyramids");
-                command.setLocation(blocks.get(0).getStack());
+
+                command.setRelationBlocks(blocks);
             } else if (direction.equals(Direction.right)) {
+                ArrayList<Entity> temp = new ArrayList<Entity>();
+                temp.add(blocks.get(0));
                 command.setLocation(blocks.get(0).getStack());
+                command.setRelationBlocks(temp);
             } else if (direction.equals(Direction.under)) {
-                Entity temp = blocks.get(0);
-                command.setLocation(temp.getStack());
-                command.setRelationBlock(temp);
+                command.setDirection(Direction.under);
+                if(thisExpression.equalsIgnoreCase("the"))
+                    command.setRelationBlocksDeterminer("the");
+                else
+                    command.setRelationBlocksDeterminer("any");
+                command.setRelationBlocks(blocks);
             }
         }
         return command;
@@ -157,29 +285,35 @@ public class ExpressionParser {
     private ArrayList<Entity> FindBlocks(String size, String colour, String kind) {
         ArrayList<Entity> possibilities = new ArrayList<Entity>(entities.values());
 
+        if(kind.equalsIgnoreCase("floor"))
+        {
+            possibilities.clear();
+            possibilities.add(entities.get("X"));
+            return possibilities;
+        }
         if (kind.equalsIgnoreCase("pyramid"))
-            possibilities = RemoveShape(possibilities, Shape.Pyramid);
+            possibilities = RemoveShape(possibilities, Shape.pyramid);
         else if (kind.equalsIgnoreCase("box"))
-            possibilities = RemoveShape(possibilities, Shape.Box);
+            possibilities = RemoveShape(possibilities, Shape.box);
         else if (kind.equalsIgnoreCase("ball"))
-            possibilities = RemoveShape(possibilities, Shape.Ball);
+            possibilities = RemoveShape(possibilities, Shape.ball);
         else if (kind.equalsIgnoreCase("rectangle"))
-            possibilities = RemoveShape(possibilities, Shape.Rectangle);
+            possibilities = RemoveShape(possibilities, Shape.rectangle);
         else if (kind.equalsIgnoreCase("square"))
-            possibilities = RemoveShape(possibilities, Shape.Square);
+            possibilities = RemoveShape(possibilities, Shape.square);
 
         if (colour.equalsIgnoreCase("red"))
-            possibilities = RemoveColour(possibilities, Colour.Red);
+            possibilities = RemoveColour(possibilities, Colour.red);
         else if (colour.equalsIgnoreCase("black"))
-            possibilities = RemoveColour(possibilities, Colour.Black);
+            possibilities = RemoveColour(possibilities, Colour.black);
         else if (colour.equalsIgnoreCase("blue"))
-            possibilities = RemoveColour(possibilities, Colour.Blue);
+            possibilities = RemoveColour(possibilities, Colour.blue);
         else if (colour.equalsIgnoreCase("green"))
-            possibilities = RemoveColour(possibilities, Colour.Green);
+            possibilities = RemoveColour(possibilities, Colour.green);
         else if (colour.equalsIgnoreCase("yellow"))
-            possibilities = RemoveColour(possibilities, Colour.Yellow);
+            possibilities = RemoveColour(possibilities, Colour.yellow);
         else if (colour.equalsIgnoreCase("white"))
-            possibilities = RemoveColour(possibilities, Colour.White);
+            possibilities = RemoveColour(possibilities, Colour.white);
 
         if (size.equalsIgnoreCase("large"))
             possibilities = RemoveSize(possibilities, Size.large);
@@ -197,7 +331,6 @@ public class ExpressionParser {
     }
 
     private ArrayList<Entity> RemoveShape(ArrayList<Entity> possibilities, Shape shape) {
-        Iterator<Entity> iterator = possibilities.iterator();
         ArrayList<Entity> possibilitiesLeft = new ArrayList<Entity>();
         for (Entity possibility : possibilities)
             if (possibility.getShape().equals(shape))
@@ -206,7 +339,6 @@ public class ExpressionParser {
     }
 
     private ArrayList<Entity> RemoveColour(ArrayList<Entity> possibilities, Colour colour) {
-        Iterator<Entity> iterator = possibilities.iterator();
         ArrayList<Entity> possibilitiesLeft = new ArrayList<Entity>();
         for (Entity possibility : possibilities)
             if (possibility.getColour().equals(colour))
@@ -215,7 +347,6 @@ public class ExpressionParser {
     }
 
     private ArrayList<Entity> RemoveSize(ArrayList<Entity> possibilities, Size size) {
-        Iterator<Entity> iterator = possibilities.iterator();
         ArrayList<Entity> possibilitiesLeft = new ArrayList<Entity>();
         for (Entity possibility : possibilities)
             if (possibility.getSize().equals(size))
@@ -223,8 +354,50 @@ public class ExpressionParser {
         return possibilitiesLeft;
     }
 
-    private void ExitWithError(String errorMessage) {
-        System.out.println(errorMessage);
-        System.exit(0);
+    private void ExitWithError(String errorMessage) throws ParserErrorException {
+        throw new ParserErrorException(errorMessage);
+    }
+
+    private String CheckRules(Entity blockOne, Entity blockTwo, Direction direction) {
+        Shape shape = blockOne.getShape();
+        String errorString = "Ok";
+        if (direction == Direction.under) {
+            if (shape == Shape.floor)
+                errorString = "Can not put anything under the floor";
+            if ((shape.equals(Shape.pyramid) || shape.equals(Shape.ball)))
+                errorString = "Can not place pyramids or balls under anything.";
+            if (blockOne.getSize().getValue() < blockTwo.getSize().getValue())
+                errorString = "Can not place something smaller underneath something bigger";
+            if (blockTwo.getShape() == Shape.box && !(blockOne.getSize().getValue() > blockTwo.getSize().getValue() ))
+                errorString = "Can only place something strictly bigger under boxes";
+        } else if (direction == Direction.here) {
+            if (!(blockOne.getSize().getValue() <= blockTwo.getSize().getValue()))
+                errorString = "Cannot put something bigger on/inside something smaller";
+            if (blockOne.getShape() == Shape.box && !(blockOne.getSize().getValue() > blockTwo.getSize().getValue()))
+                errorString = "A box has can only be put on something strictly bigger";
+        }
+        if (direction != Direction.here && blockTwo == entities.get("X")) {
+            errorString = "Can not do anything with the floor except put objects on it";
+        }
+        return errorString;
+    }
+
+    private Entity FindMostAccesibleBlock(ArrayList<Entity> blocks)
+    {
+        Entity mostAccesibleBlock = blocks.get(0);
+        int blocksOverIt = Integer.MAX_VALUE;
+        for (Entity current : blocks) {
+            if (world[current.getStack()].length() - 1 - current.getIndexInStack() < blocksOverIt) {
+                mostAccesibleBlock = current;
+                blocksOverIt = world[current.getStack()].length() - 1 - current.getIndexInStack();
+            }
+        }
+
+        return mostAccesibleBlock;
+    }
+
+    private String BlockString(Entity block)
+    {
+        return " the " + block.getSize() + " " + block.getColour() + " " + block.getShape();
     }
 }

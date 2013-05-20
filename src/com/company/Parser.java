@@ -23,6 +23,8 @@ public class Parser {
         Expression expression = new Expression();
         while (!(Peek().equals("(") || Peek().equals(")"))) {
             expression.AppendThisCommand(NextToken());
+            if(!HasNext())
+                return expression;
         }
         String temp = NextToken();
         if (temp.equals("("))
@@ -35,9 +37,12 @@ public class Parser {
                 NextToken();
                 expression.setSubExpressionTwo(MakeExpressions());
             }
-            if (Peek().equals(")")) {
-                NextToken();
-                return expression;
+            if(HasNext())
+            {
+                if (Peek().equals(")")) {
+                    NextToken();
+                    return expression;
+                }
             }
         }
 
@@ -56,7 +61,7 @@ public class Parser {
     }
 
     public Boolean HasNext() {
-        return atIndex < tokens.length - 1;
+        return atIndex < tokens.length;
     }
 
 }

@@ -8,10 +8,10 @@ package com.company;
  * To change this template use File | Settings | File Templates.
  */
 public enum Shape {
-    Ball,
-    Rectangle,
-    Square,
-    Pyramid,
-    Box,
-    Floor;
+    ball,
+    rectangle,
+    square,
+    pyramid,
+    box,
+    floor;
 }

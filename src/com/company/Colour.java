@@ -8,10 +8,10 @@ package com.company;
  * To change this template use File | Settings | File Templates.
  */
 public enum Colour {
-    Blue,
-    White,
-    Red,
-    Green,
-    Black,
-    Yellow;
+    blue,
+    white,
+    red,
+    green,
+    black,
+    yellow;
 }

@@ -1,5 +1,7 @@
 package com.company;
 
+import java.util.ArrayList;
+
 /**
  * Created with IntelliJ IDEA.
  * User: Johan
@@ -9,17 +11,37 @@ package com.company;
  */
 public class Command {
     private Movement movement;
-    private Entity block;
-    private int location;
-    private Direction direction;
-    private Entity relationBlock;
 
-    public Entity getRelationBlock() {
-        return relationBlock;
+    public String getBlockDeterminer() {
+        return blockDeterminer;
     }
 
-    public void setRelationBlock(Entity relationBlock) {
-        this.relationBlock = relationBlock;
+    public void setBlockDeterminer(String blockDeterminer) {
+        this.blockDeterminer = blockDeterminer;
+    }
+
+    public String getRelationBlocksDeterminer() {
+        return relationBlocksDeterminer;
+    }
+
+    public void setRelationBlocksDeterminer(String relationBlocksDeterminer) {
+        this.relationBlocksDeterminer = relationBlocksDeterminer;
+    }
+
+    private String blockDeterminer;
+    private ArrayList<Entity> blocks;
+    private int location;
+    private Direction direction;
+    // TODO change to list of relation blocks
+    private String relationBlocksDeterminer;
+    private ArrayList<Entity> relationBlocks;
+
+    public ArrayList<Entity> getRelationBlocks() {
+        return relationBlocks;
+    }
+
+    public void addRelationBlock(Entity relationBlock) {
+        this.relationBlocks.add(relationBlock);
     }
 
     public Movement getMovement() {
@@ -38,12 +60,12 @@ public class Command {
         this.location = location;
     }
 
-    public Entity getBlock() {
-        return block;
+    public ArrayList<Entity> getBlocks() {
+        return blocks;
     }
 
-    public void setBlock(Entity block) {
-        this.block = block;
+    public void addBlock(Entity block) {
+        this.blocks.add(block);
     }
 
     public Direction getDirection() {
@@ -54,12 +76,23 @@ public class Command {
         this.direction = direction;
     }
 
+    public void setBlocks(ArrayList<Entity> blocks)
+    {
+        this.blocks = blocks;
+    }
+
+    public void setRelationBlocks (ArrayList<Entity> relationBlocks)
+    {
+        this.relationBlocks = relationBlocks;
+    }
+
     public Command() {
+        blocks = new ArrayList<Entity>();
+        relationBlocks = new ArrayList<Entity>();
     }
 }
 
 enum Movement {
-    doNothing,
     move,
     pick,
     drop;

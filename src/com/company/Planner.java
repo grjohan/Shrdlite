@@ -9,12 +9,12 @@ public class Planner {
     Entity relationBlock = null;
     HashMap<String, Entity> entities;
     Hashtable<String,Node> nodes;
-    ArrayList<Command> commands = new ArrayList<Command>();
+    Command command = new Command();
     Entity[] blockToRemove;
 
-    public Planner(String world, ArrayList<Command> commands,HashMap<String, Entity> entities) {
+    public Planner(String world, Command command,HashMap<String, Entity> entities) {
         this.world = world;
-        this.commands = commands;
+        this.command = command;
         this.entities = entities;
         nodes = new Hashtable<String, Node>();
         // Print the data
@@ -22,30 +22,123 @@ public class Planner {
     }
 
     private void ConstructGoalWorld(Node start) {
-        blockToRemove = new Entity[commands.size()];
+        if(start.isHolding())
+            blockToRemove = new Entity[1];
+        else
+            blockToRemove = new Entity[command.getBlocks().size()];
         String[] oldWorld = world.split(";");
         String[] newWorld = new String[oldWorld.length];
         world = "";
-        direction = commands.get(0).getDirection();
-        location = commands.get(0).getLocation();
-        relationBlock = commands.get(0).getRelationBlock();
-        for (int i = 0; i < commands.size(); i++) {
-            blockToRemove[i] = commands.get(i).getBlock();
-        }
+        direction = command.getDirection();
+        location = command.getLocation();
+        if (command.getMovement() != Movement.pick)
+            relationBlock = command.getRelationBlocks().get(0);
+
         if(start.isHolding())
             blockToRemove[0] = entities.get(start.getHoldingBlock());
+        else
+        {
+            for (int i = 0; i < command.getBlocks().size(); i++) {
+                blockToRemove[i] = command.getBlocks().get(i);
+            }
+        }
         for (int i = 0; i < oldWorld.length; i++) {
             newWorld[i] = oldWorld[i];
             for (int j = 0; j < blockToRemove.length; j++) {
                 String block = blockToRemove[j].getName();
                 newWorld[i] = newWorld[i].replaceAll(block, "");
             }
-            world += newWorld[i] + ";";
+        }
+        if(direction == Direction.under)
+        {
+            // just put as many don't care terms under it as we are moving there
+            String under,objects,top;
+            under = newWorld[location].substring(0,newWorld[location].indexOf(command.getRelationBlocks().get(0).getName()));
+            objects = "";
+            for(Entity block : command.getBlocks())
+            {
+                objects += "*";
+            }
+            top = newWorld[location].substring(newWorld[location].indexOf(command.getRelationBlocks().get(0).getName()));
+            newWorld[location] = under + objects + top;
+        }
+        if(direction == Direction.here)
+        {
+            Entity smallestStackingObject = command.getBlocks().get(0);
+            boolean unstackable = false;
+            for(Entity block : command.getBlocks())
+            {
+               if (block.getShape() == Shape.pyramid || block.getShape() == Shape.ball)
+                   unstackable = true;
+                if (block.getSize().getValue() < smallestStackingObject.getSize().getValue())
+                    smallestStackingObject = block;
+            }
+            // check if there is a block on it
+            if (newWorld[location].length() > command.getRelationBlocks().get(0).getIndexInStack() +1)
+            {
+                Entity blockToPutOver = entities.get(String.valueOf(newWorld[location].charAt(command.getRelationBlocks().get(0).getIndexInStack() +1)));
+                if((smallestStackingObject.getSize().getValue() < blockToPutOver.getSize().getValue()) || unstackable)
+                {
+                    newWorld[location] = newWorld[location].substring(0,newWorld[location].indexOf(command.getRelationBlocks().get(0).getName()) + 1);
+                }
+                // if it works to put it back, we have to add it there in the goal world but with don't care term
+                else
+                {
+                    String under,objects,top;
+                    under = newWorld[location].substring(0,newWorld[location].indexOf(command.getRelationBlocks().get(0).getName()) + 1);
+                    objects = "";
+                    for(Entity block : command.getBlocks())
+                    {
+                        objects += "*";
+                    }
+                    top = newWorld[location].substring(newWorld[location].indexOf(command.getRelationBlocks().get(0).getName()) + 1);
+                    newWorld[location] = under + objects + top;
+                }
+            }
+        }
+        for (String temp : newWorld)
+        {
+            world += temp + ";";
         }
         world = world.substring(0, world.length() - 1);
 
-        // TODO fix so that ontop/under command has blocks on top as don't care terms if they do not fit back on top
-        // TODO fix in parser so that it understands the command floor
+        // Check if this world is actually possible, only impossible thing would be putting to many unstackables left or right of something
+        int numberOfStacks = 1,numberOfUnstackables = 0;
+        if(direction == Direction.right)
+        {
+            numberOfStacks = 9 - location;
+            for (int i = 9; i > location; i--)
+            {
+                Entity topBlock = entities.get(newWorld[i].substring(newWorld[i].length()-1));
+                if(topBlock.getShape() == Shape.pyramid || topBlock.getShape() == Shape.ball)
+                    numberOfUnstackables++;
+            }
+        }
+        if(direction == Direction.left)
+        {
+            numberOfStacks = location;
+            for (int i = 0; i < location; i++)
+            {
+                Entity topBlock = entities.get(newWorld[i].substring(newWorld[i].length()-1));
+                if(topBlock.getShape() == Shape.pyramid || topBlock.getShape() == Shape.ball)
+                    numberOfUnstackables++;
+            }
+        }
+        for(Entity block : command.getBlocks())
+        {
+            if(block.getShape() == Shape.pyramid || block.getShape() == Shape.ball)
+                numberOfUnstackables++;
+        }
+        if(numberOfStacks < numberOfUnstackables)
+        {
+            System.out.println("Cannot place that many unstackable objects in that space");
+            System.exit(1);
+        }
+        if(numberOfStacks == 0)
+        {
+            System.out.println("There is no room to preform this action");
+            System.exit(1);
+        }
     }
 
      public String GraphSearch(Node start)
@@ -58,14 +151,19 @@ public class Planner {
          };
        PriorityQueue<Node> frontier = new PriorityQueue<Node>(100000,compareNodes);
        ConstructGoalWorld(start);
-       SetNodeValue(start);
+       start.setValue(SetNodeValue(start,0));
        start.setFromNode(null);
+       if(start.getValue() == 0)
+       return "This is already true";
        frontier.add(start);
        ArrayList<Node> explored = new ArrayList<Node>();
        while(true)
        {
            if(frontier.size() == 0)
+           {
                return "No plan found";
+           }
+
            Node test = frontier.poll();
            if(test.getValue() == test.getWeightUntilHere())
            {
@@ -81,18 +179,31 @@ public class Planner {
            ArrayList<Node> expanded = ExpandNode(test);
            for (Node node : expanded)
            {
-               if (! frontier.contains(node) && !explored.contains(node))
+               if (!explored.contains(node))
                {
-                   node.setFromNode(test);
-                   node.setWeightUntilHere(test.getWeightUntilHere()+1);
-                   SetNodeValue(node);
-                   frontier.add(node);
+                   if(!frontier.contains(node))
+                   {
+                       node.setFromNode(test);
+                       node.setWeightUntilHere(test.getWeightUntilHere()+1);
+                       node.setValue(SetNodeValue(node, node.getWeightUntilHere()));
+                       frontier.add(node);
+                   }
+                   else
+                   {
+                       int temp = SetNodeValue(node , test.getWeightUntilHere()+1);
+                       if(node.getValue() > temp )
+                       {
+                           node.setFromNode(test);
+                           node.setWeightUntilHere(test.getWeightUntilHere() + 1);
+                           node.setValue(temp);
+                       }
+                   }
                }
            }
        }
      }
 
-    private void SetNodeValue(Node node)
+    private int SetNodeValue(Node node, int weightUntilHere)
     {
         int value = 0;
         String[] state = node.getState().split(";");
@@ -107,7 +218,7 @@ public class Planner {
                 if (state[i].length() > j) {
                     two = state[i].charAt(j);
                 }
-                if (one != two)
+                if (one != two && one != '*')
                     value++;
             }
         }
@@ -117,6 +228,7 @@ public class Planner {
         {
             if (node.getHoldingBlock().equals(blockToRemove[0].getName()))
                 value--;
+
         }
         else if (direction == Direction.here) {
             for (int i = 0; i < state[location].length() ; i++)
@@ -129,7 +241,7 @@ public class Planner {
                 }
             }
         } else if (direction == Direction.under) {
-            for(int i = 0; i < state[location].length(); i++)
+           for(int i = 0; i < state[location].length(); i++)
             {
                 char one = state[location].charAt(i);
                 if(one == relationBlock.getName().charAt(0))
@@ -141,6 +253,8 @@ public class Planner {
                         value--;
                 }
             }
+
+
         } else if (direction == Direction.right) {
            for(int i = state.length-1; i > location; i-- )
            {
@@ -168,7 +282,7 @@ public class Planner {
                 }
             }
         }
-        node.setValue(value+node.getWeightUntilHere());
+        return value+weightUntilHere;
     }
 
     private ArrayList<Node> ExpandNode(Node node) {
@@ -179,8 +293,8 @@ public class Planner {
         // loop through all stacks, we can only take an action for the top of each stack
         for (int i = 0; i < stacks.length; i++) {
             String modifiedStacks = "";
-            if ((stacks[i].length() > 1)) {
-                if(!node.isHolding())
+            if ((stacks[i].length() >= 1)) {
+                if(!node.isHolding()  && (stacks[i].length() > 1))
                 {
                     String currentStack = stacks[i];
                     Node temp;
@@ -197,7 +311,7 @@ public class Planner {
                         temp = nodes.get(modifiedStacks);
                         temp.setHolding(true);
                         temp.setHoldingBlock(holdingBlock);
-                        neighbors.put(temp, "pick " + i + ";");
+                        neighbors.put(temp, "I pick up " + BlockString(entities.get(holdingBlock)) + "\npick " + i + ";");
                         neighborsToReturn.add(temp);
                     } else {
 
@@ -206,7 +320,7 @@ public class Planner {
                         temp.setHolding(true);
                         temp.setHoldingBlock(holdingBlock);
                         nodes.put(modifiedStacks,temp);
-                        neighbors.put(temp, "pick " + i + ";");
+                        neighbors.put(temp, "I pick up " + BlockString(entities.get(holdingBlock)) + "\npick " + i + ";");
                         neighborsToReturn.add(temp);
                     }
                     String thisStack = stacks[i].substring(0, stacks[i].length() - 1);
@@ -227,15 +341,22 @@ public class Planner {
                                         else
                                             modifiedStacks += stacks[z] + ";";
                                     }
+                                    String onInside = " on top of ";
+                                    if (thisStacksTop.getShape() == Shape.box)
+                                        onInside = " inside of ";
                                     if (nodes.containsKey(modifiedStacks)) {
                                         temp = nodes.get(modifiedStacks);
-                                        neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                        topBlock.setStack(j);
+                                        topBlock.setIndexInStack(thisStacksTop.getIndexInStack()+1);
+                                        neighbors.put(temp,"I move " +BlockString(topBlock) + onInside + BlockString(thisStacksTop) + "\npick " + i + "\ndrop " + j + ";");
                                         neighborsToReturn.add(temp);
                                     } else {
 
                                         temp = new Node();
                                         temp.setState(modifiedStacks);
-                                        neighbors.put(temp, "pick " + i + "\ndrop " + j + ";");
+                                        topBlock.setStack(j);
+                                        topBlock.setIndexInStack(thisStacksTop.getIndexInStack()+1);
+                                        neighbors.put(temp,"I move " +BlockString(topBlock) + onInside + BlockString(thisStacksTop) + "\npick " + i + "\ndrop " + j + ";");
                                         nodes.put(modifiedStacks,temp);
                                         neighborsToReturn.add(temp);
                                     }
@@ -263,7 +384,9 @@ public class Planner {
                                 temp = nodes.get(modifiedStacks);
                                 temp.setHolding(false);
                                 temp.setHoldingBlock("");
-                                neighbors.put(temp, "drop " + i + ";");
+                                neighbors.put(temp, "I put " + BlockString(currentlyHolding) + "on " + BlockString(blockToPutAt) + "\ndrop " + i + ";");
+                                currentlyHolding.setStack(i);
+                                currentlyHolding.setIndexInStack(blockToPutAt.getIndexInStack()+1);
                                 neighborsToReturn.add(temp);
                             } else {
 
@@ -271,7 +394,9 @@ public class Planner {
                                 temp.setState(modifiedStacks);
                                 temp.setHolding(false);
                                 temp.setHoldingBlock("");
-                                neighbors.put(temp, "drop " + i + ";");
+                                neighbors.put(temp, "I put " + BlockString(currentlyHolding) + "on " + BlockString(blockToPutAt) + "\ndrop " + i + ";");
+                                currentlyHolding.setStack(i);
+                                currentlyHolding.setIndexInStack(blockToPutAt.getIndexInStack()+1);
                                 neighborsToReturn.add(temp);
                                 nodes.put(modifiedStacks,temp);
                             }
@@ -288,13 +413,20 @@ public class Planner {
 
     private Boolean CanPutOn(Entity blockToPlace, Entity blockToPlaceAt)
     {
-        if(blockToPlaceAt.getShape() == Shape.Pyramid || blockToPlaceAt.getShape() == Shape.Ball)
+        if(blockToPlaceAt.getShape() == Shape.pyramid || blockToPlaceAt.getShape() == Shape.ball)
             return false;
-        if(blockToPlace.getShape() == Shape.Box && blockToPlaceAt.getSize().getValue() <= blockToPlace.getSize().getValue())
+        if(blockToPlace.getShape() == Shape.box && blockToPlaceAt.getSize().getValue() <= blockToPlace.getSize().getValue())
             return false;
         if(blockToPlace.getSize().getValue() > blockToPlaceAt.getSize().getValue())
             return false;
         return true;
+    }
+
+    private String BlockString(Entity block)
+    {
+        if (block.getShape() == Shape.floor)
+            return "the floor";
+        return "the " + block.getSize() + " " + block.getColour() + " " + block.getShape();
     }
 
 }
